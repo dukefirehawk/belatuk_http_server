@@ -11,7 +11,7 @@ import 'package:test/test.dart';
 
 import 'utils.dart';
 
-void _testEncoding(name, expected, [bool create = true]) {
+void _testEncoding(dynamic name, dynamic expected, [bool create = true]) {
   testVirtualDir('encode-$name', (dir) async {
     if (create) File('${dir.path}/$name').createSync();
     var virDir = VirtualDirectory(dir.path);
@@ -151,17 +151,27 @@ void main() {
           virDir.allowDirectoryListing = true;
 
           var result = await Future.wait([
-            fetchAsString(virDir, '/')
-                .then((s) => s.contains('recursive&#47;')),
+            fetchAsString(
+              virDir,
+              '/',
+            ).then((s) => s.contains('recursive&#47;')),
             fetchAsString(virDir, '/').then((s) => !s.contains('../')),
-            fetchAsString(virDir, '/')
-                .then((s) => s.contains('Index of &#47;')),
-            fetchAsString(virDir, '/recursive')
-                .then((s) => s.contains('recursive&#47;')),
-            fetchAsString(virDir, '/recursive')
-                .then((s) => s.contains('..&#47;')),
-            fetchAsString(virDir, '/recursive')
-                .then((s) => s.contains('Index of &#47;recursive'))
+            fetchAsString(
+              virDir,
+              '/',
+            ).then((s) => s.contains('Index of &#47;')),
+            fetchAsString(
+              virDir,
+              '/recursive',
+            ).then((s) => s.contains('recursive&#47;')),
+            fetchAsString(
+              virDir,
+              '/recursive',
+            ).then((s) => s.contains('..&#47;')),
+            fetchAsString(
+              virDir,
+              '/recursive',
+            ).then((s) => s.contains('Index of &#47;recursive')),
           ]);
           expect(result, equals([true, true, true, true, true, true]));
         });
@@ -225,8 +235,11 @@ void main() {
           fail('not expected');
         };
 
-        var result =
-            await statusCodeForVirtDir(virDir, '/dir', followRedirects: false);
+        var result = await statusCodeForVirtDir(
+          virDir,
+          '/dir',
+          followRedirects: false,
+        );
         expect(result, 301);
       });
 
@@ -392,11 +405,15 @@ void main() {
 
         var headers = await fetchHEaders(virDir, '/file');
         expect(headers.value(HttpHeaders.lastModifiedHeader), isNotNull);
-        var lastModified =
-            HttpDate.parse(headers.value(HttpHeaders.lastModifiedHeader)!);
+        var lastModified = HttpDate.parse(
+          headers.value(HttpHeaders.lastModifiedHeader)!,
+        );
 
-        var result = await statusCodeForVirtDir(virDir, '/file',
-            ifModifiedSince: lastModified);
+        var result = await statusCodeForVirtDir(
+          virDir,
+          '/file',
+          ifModifiedSince: lastModified,
+        );
         expect(result, HttpStatus.notModified);
       });
 
@@ -406,14 +423,18 @@ void main() {
 
         var headers = await fetchHEaders(virDir, '/file');
         expect(headers.value(HttpHeaders.lastModifiedHeader), isNotNull);
-        var lastModified =
-            HttpDate.parse(headers.value(HttpHeaders.lastModifiedHeader)!);
+        var lastModified = HttpDate.parse(
+          headers.value(HttpHeaders.lastModifiedHeader)!,
+        );
 
         // Fake file changed by moving date back in time.
         lastModified = lastModified.subtract(const Duration(seconds: 10));
 
-        var result = await statusCodeForVirtDir(virDir, '/file',
-            ifModifiedSince: lastModified);
+        var result = await statusCodeForVirtDir(
+          virDir,
+          '/file',
+          ifModifiedSince: lastModified,
+        );
         expect(result, HttpStatus.ok);
       });
     });
@@ -453,17 +474,27 @@ void main() {
 
     testVirtualDir('range', (dir) async {
       prepare(dir);
-      Future<void> check(int from, int to,
-          [List<int>? expected, String? contentRange]) async {
+      Future<void> check(
+        int from,
+        int to, [
+        List<int>? expected,
+        String? contentRange,
+      ]) async {
         expected ??= fileContent.sublist(from, to + 1);
         contentRange ??= 'bytes $from-$to/${fileContent.length}';
-        var result =
-            await fetchContentAndResponse(virDir, '/file', from: from, to: to);
+        var result = await fetchContentAndResponse(
+          virDir,
+          '/file',
+          from: from,
+          to: to,
+        );
         var content = result[0];
         var response = result[1];
         expect(content, expected);
         expect(
-            response.headers[HttpHeaders.contentRangeHeader][0], contentRange);
+          response.headers[HttpHeaders.contentRangeHeader][0],
+          contentRange,
+        );
         expect(expected.length, response.headers.contentLength);
         expect(response.statusCode, HttpStatus.partialContent);
       }
@@ -482,14 +513,17 @@ void main() {
 
     testVirtualDir('prefix-range', (dir) async {
       prepare(dir);
-      Future<void> check(int from,
-          [List<int>? expected,
-          String? contentRange,
-          bool expectContentRange = true,
-          int expectedStatusCode = HttpStatus.partialContent]) async {
+      Future<void> check(
+        int from, [
+        List<int>? expected,
+        String? contentRange,
+        bool expectContentRange = true,
+        int expectedStatusCode = HttpStatus.partialContent,
+      ]) async {
         expected ??= fileContent.sublist(from, fileContent.length);
         if (contentRange == null && expectContentRange) {
-          contentRange = 'bytes $from-'
+          contentRange =
+              'bytes $from-'
               '${fileContent.length - 1}/'
               '${fileContent.length}';
         }
@@ -498,8 +532,10 @@ void main() {
         var response = result[1];
         expect(content, expected);
         if (expectContentRange) {
-          expect(response.headers[HttpHeaders.contentRangeHeader][0],
-              contentRange);
+          expect(
+            response.headers[HttpHeaders.contentRangeHeader][0],
+            contentRange,
+          );
         } else {
           expect(response.headers[HttpHeaders.contentRangeHeader], null);
         }
@@ -516,11 +552,17 @@ void main() {
 
     testVirtualDir('suffix-range', (dir) async {
       prepare(dir);
-      Future<void> check(int to,
-          [List<int>? expected, String? contentRange]) async {
-        expected ??=
-            fileContent.sublist(fileContent.length - to, fileContent.length);
-        contentRange ??= 'bytes ${fileContent.length - to}-'
+      Future<void> check(
+        int to, [
+        List<int>? expected,
+        String? contentRange,
+      ]) async {
+        expected ??= fileContent.sublist(
+          fileContent.length - to,
+          fileContent.length,
+        );
+        contentRange ??=
+            'bytes ${fileContent.length - to}-'
             '${fileContent.length - 1}/'
             '${fileContent.length}';
         var result = await fetchContentAndResponse(virDir, '/file', to: to);
@@ -528,7 +570,9 @@ void main() {
         var response = result[1];
         expect(content, expected);
         expect(
-            response.headers[HttpHeaders.contentRangeHeader][0], contentRange);
+          response.headers[HttpHeaders.contentRangeHeader][0],
+          contentRange,
+        );
         expect(response.statusCode, HttpStatus.partialContent);
       }
 
@@ -543,8 +587,12 @@ void main() {
     testVirtualDir('unsatisfiable-range', (dir) async {
       prepare(dir);
       Future<void> check(int from, int to) async {
-        var result =
-            await fetchContentAndResponse(virDir, '/file', from: from, to: to);
+        var result = await fetchContentAndResponse(
+          virDir,
+          '/file',
+          from: from,
+          to: to,
+        );
         var content = result[0];
         var response = result[1];
         expect(content.length, 0);
@@ -560,8 +608,12 @@ void main() {
     testVirtualDir('invalid-range', (dir) async {
       prepare(dir);
       Future<void> check(int? from, int to) async {
-        var result =
-            await fetchContentAndResponse(virDir, '/file', from: from, to: to);
+        var result = await fetchContentAndResponse(
+          virDir,
+          '/file',
+          from: from,
+          to: to,
+        );
         var content = result[0];
         var response = result[1];
         expect(content, fileContent);
@@ -598,26 +650,30 @@ void main() {
     });
   });
 
-  group('escape-root', () {
-    testVirtualDir('escape1', (dir) async {
-      var virDir = VirtualDirectory(dir.path);
-      virDir.allowDirectoryListing = true;
+  group(
+    'escape-root',
+    () {
+      testVirtualDir('escape1', (dir) async {
+        var virDir = VirtualDirectory(dir.path);
+        virDir.allowDirectoryListing = true;
 
-      var result = await statusCodeForVirtDir(virDir, '/../');
-      expect(result, HttpStatus.notFound);
-    });
+        var result = await statusCodeForVirtDir(virDir, '/../');
+        expect(result, HttpStatus.notFound);
+      });
 
-    testVirtualDir('escape2', (dir) async {
-      Directory('${dir.path}/dir').createSync();
-      var virDir = VirtualDirectory(dir.path);
-      virDir.allowDirectoryListing = true;
+      testVirtualDir('escape2', (dir) async {
+        Directory('${dir.path}/dir').createSync();
+        var virDir = VirtualDirectory(dir.path);
+        virDir.allowDirectoryListing = true;
 
-      var result = await statusCodeForVirtDir(virDir, '/dir/../../');
-      expect(result, HttpStatus.notFound);
-    });
-  },
-      skip: 'Broken. Likely due to dart:core Uri changes.'
-          'See https://github.com/dart-lang/http_server/issues/40');
+        var result = await statusCodeForVirtDir(virDir, '/dir/../../');
+        expect(result, HttpStatus.notFound);
+      });
+    },
+    skip:
+        'Broken. Likely due to dart:core Uri changes.'
+        'See https://github.com/dart-lang/http_server/issues/40',
+  );
 
   group('url-decode', () {
     testVirtualDir('with-space', (dir) async {
@@ -643,8 +699,11 @@ void main() {
       var virDir = VirtualDirectory(dir.path);
       virDir.allowDirectoryListing = true;
 
-      var result =
-          await statusCodeForVirtDir(virDir, '/a%2fb/c', rawPath: true);
+      var result = await statusCodeForVirtDir(
+        virDir,
+        '/a%2fb/c',
+        rawPath: true,
+      );
       expect(result, HttpStatus.notFound);
     });
 
@@ -656,11 +715,15 @@ void main() {
       expect(result, HttpStatus.notFound);
     });
 
-    group('broken', () {
-      _testEncoding('..', HttpStatus.notFound, false);
-    },
-        skip: 'Broken. Likely due to dart:core Uri changes.'
-            'See https://github.com/dart-lang/http_server/issues/40');
+    group(
+      'broken',
+      () {
+        _testEncoding('..', HttpStatus.notFound, false);
+      },
+      skip:
+          'Broken. Likely due to dart:core Uri changes.'
+          'See https://github.com/dart-lang/http_server/issues/40',
+    );
 
     _testEncoding('%2e%2e', HttpStatus.ok);
     _testEncoding('%252e%252e', HttpStatus.ok);

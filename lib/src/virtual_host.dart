@@ -102,7 +102,8 @@ class _VirtualHost implements VirtualHost {
   Stream<HttpRequest> addHost(String host) {
     if (host.lastIndexOf('*') > 0) {
       throw ArgumentError(
-          'Wildcards are only allowed in the beginning of a host');
+        'Wildcards are only allowed in the beginning of a host',
+      );
     }
     var controller = StreamController<HttpRequest>();
     var domains = host.split('.');

@@ -39,7 +39,7 @@ class FormField {
     return "FormField('$name', '$value', '$contentType', '$filename')";
   }
 
-  static bool _valuesEqual(a, b) {
+  static bool _valuesEqual(dynamic a, dynamic b) {
     if (a is String && b is String) {
       return a == b;
     } else if (a is List && b is List) {
@@ -57,9 +57,13 @@ class FormField {
   }
 }
 
-Future _postDataTest(List<int> message, String contentType, String boundary,
-    List<FormField> expectedFields,
-    {Encoding defaultEncoding = latin1}) async {
+Future _postDataTest(
+  List<int> message,
+  String contentType,
+  String boundary,
+  List<FormField> expectedFields, {
+  Encoding defaultEncoding = latin1,
+}) async {
   var addr = (await InternetAddress.lookup('localhost'))[0];
 
   var server = await HttpServer.bind(addr, 0);
@@ -68,24 +72,34 @@ Future _postDataTest(List<int> message, String contentType, String boundary,
     var boundary = request.headers.contentType!.parameters['boundary']!;
     var fields = await MimeMultipartTransformer(boundary)
         .bind(request)
-        .map((part) =>
-            HttpMultipartFormData.parse(part, defaultEncoding: defaultEncoding))
+        .map(
+          (part) => HttpMultipartFormData.parse(
+            part,
+            defaultEncoding: defaultEncoding,
+          ),
+        )
         .asyncMap((multipart) async {
-      dynamic data;
-      if (multipart.isText) {
-        data = await multipart.join();
-      } else {
-        data = await multipart
-            .fold<List<int>>([], (b, s) => b..addAll(s as List<int>));
-      }
-      String? contentType;
-      if (multipart.contentType != null) {
-        contentType = multipart.contentType!.mimeType;
-      }
-      return FormField(multipart.contentDisposition.parameters['name'], data,
-          contentType: contentType,
-          filename: multipart.contentDisposition.parameters['filename']);
-    }).toList();
+          dynamic data;
+          if (multipart.isText) {
+            data = await multipart.join();
+          } else {
+            data = await multipart.fold<List<int>>(
+              [],
+              (b, s) => b..addAll(s as List<int>),
+            );
+          }
+          String? contentType;
+          if (multipart.contentType != null) {
+            contentType = multipart.contentType!.mimeType;
+          }
+          return FormField(
+            multipart.contentDisposition.parameters['name'],
+            data,
+            contentType: contentType,
+            filename: multipart.contentDisposition.parameters['filename'],
+          );
+        })
+        .toList();
     expect(fields, equals(expectedFields));
     await request.response.close();
     await server.close();
@@ -95,8 +109,10 @@ Future _postDataTest(List<int> message, String contentType, String boundary,
 
   var request = await client.post('localhost', server.port, '/');
 
-  request.headers
-      .set('content-type', 'multipart/form-data; boundary=$boundary');
+  request.headers.set(
+    'content-type',
+    'multipart/form-data; boundary=$boundary',
+  );
   request.add(message);
 
   await request.close();
@@ -109,8 +125,12 @@ void main() {
     var message0 = '''
 ------WebKitFormBoundaryU3FBruSkJKG0Yor1--\r\n''';
 
-    await _postDataTest(message0.codeUnits, 'multipart/form-data',
-        '----WebKitFormBoundaryU3FBruSkJKG0Yor1', []);
+    await _postDataTest(
+      message0.codeUnits,
+      'multipart/form-data',
+      '----WebKitFormBoundaryU3FBruSkJKG0Yor1',
+      [],
+    );
   });
 
   test('test 1', () async {
@@ -128,8 +148,12 @@ Content of file\r
 
     await _postDataTest(message.codeUnits, 'multipart/form-data', 'AaB03x', [
       FormField('submit-name', 'Larry'),
-      FormField('files', 'Content of file',
-          contentType: 'text/plain', filename: 'file1.txt')
+      FormField(
+        'files',
+        'Content of file',
+        contentType: 'text/plain',
+        filename: 'file1.txt',
+      ),
     ]);
   });
 
@@ -142,8 +166,9 @@ Content-Transfer-Encoding: 8bit\r
 Larry\r
 --AaB03x--\r\n''';
 
-    await _postDataTest(message.codeUnits, 'multipart/form-data', 'AaB03x',
-        [FormField('submit-name', 'Larry')]);
+    await _postDataTest(message.codeUnits, 'multipart/form-data', 'AaB03x', [
+      FormField('submit-name', 'Larry'),
+    ]);
   });
 
   test('Windows/IE style file upload', () async {
@@ -156,8 +181,12 @@ Content of file\r
 --AaB03x--\r\n''';
 
     await _postDataTest(message.codeUnits, 'multipart/form-data', 'AaB03x', [
-      FormField('files', 'Content of file',
-          contentType: 'text/plain', filename: 'C:\\file1".txt')
+      FormField(
+        'files',
+        'Content of file',
+        contentType: 'text/plain',
+        filename: 'C:\\file1".txt',
+      ),
     ]);
   });
 
@@ -187,7 +216,7 @@ Content of file\r
       48, 52, 50, 51, 48, 48, 48, 52, 34, 10, 125, 13, 10, 45, 45, 45, 45, 45,
       45, 87, 101, 98, 75, 105, 116, 70, 111, 114, 109, 66, 111, 117, 110, 100,
       97, 114, 121, 81, 83, 113, 108, 56, 107, 68, 65, 76, 77, 55, 116, 65, 107,
-      67, 49, 45, 45, 13, 10
+      67, 49, 45, 45, 13, 10,
     ];
 
     var data = [
@@ -197,15 +226,23 @@ Content of file\r
       105, 111, 110, 34, 32, 58, 32, 34, 48, 46, 49, 46, 50, 46, 48, 95, 114,
       50, 49, 56, 54, 48, 34, 44, 10, 32, 32, 34, 100, 97, 116, 101, 34, 32, 32,
       32, 32, 58, 32, 34, 50, 48, 49, 51, 48, 52, 50, 51, 48, 48, 48, 52, 34,
-      10, 125
+      10, 125,
     ];
 
-    await _postDataTest(message2, 'multipart/form-data',
-        '----WebKitFormBoundaryQSql8kDALM7tAkC1', [
-      FormField('submit-name', 'Test'),
-      FormField('files', data,
-          contentType: 'application/octet-stream', filename: 'VERSION')
-    ]);
+    await _postDataTest(
+      message2,
+      'multipart/form-data',
+      '----WebKitFormBoundaryQSql8kDALM7tAkC1',
+      [
+        FormField('submit-name', 'Test'),
+        FormField(
+          'files',
+          data,
+          contentType: 'application/octet-stream',
+          filename: 'VERSION',
+        ),
+      ],
+    );
   });
 
   test('HTML entity encoding in values in form fields', () async {
@@ -223,15 +260,16 @@ Content of file\r
       35, 49, 50, 52, 50, 53, 59, 38, 35, 49, 50, 51, 54, 52, 59, 38, 35, 49,
       50, 51, 57, 52, 59, 13, 10, 45, 45, 45, 45, 45, 45, 87, 101, 98, 75, 105,
       116, 70, 111, 114, 109, 66, 111, 117, 110, 100, 97, 114, 121, 118, 65, 86,
-      122, 117, 103, 75, 77, 116, 90, 98, 121, 87, 111, 66, 71, 45, 45, 13, 10
+      122, 117, 103, 75, 77, 116, 90, 98, 121, 87, 111, 66, 71, 45, 45, 13, 10,
     ];
 
     await _postDataTest(
-        message3,
-        'multipart/form-data',
-        '----WebKitFormBoundaryvAVzugKMtZbyWoBG',
-        [FormField('name', '&#12402;&#12425;&#12364;&#12394;')],
-        defaultEncoding: utf8);
+      message3,
+      'multipart/form-data',
+      '----WebKitFormBoundaryvAVzugKMtZbyWoBG',
+      [FormField('name', '&#12402;&#12425;&#12364;&#12394;')],
+      defaultEncoding: utf8,
+    );
   });
 
   test('UTF', () async {
@@ -248,12 +286,16 @@ Content of file\r
       129, 140, 227, 129, 170, 13, 10, 45, 45, 45, 45, 45, 45, 87, 101, 98, 75,
       105, 116, 70, 111, 114, 109, 66, 111, 117, 110, 100, 97, 114, 121, 71, 88,
       116, 66, 114, 99, 106, 120, 104, 101, 75, 101, 78, 54, 105, 48, 45, 45,
-      13, 10
+      13, 10,
     ];
 
-    await _postDataTest(message4, 'multipart/form-data',
-        '----WebKitFormBoundaryGXtBrcjxheKeN6i0', [FormField('test', 'ひらがな')],
-        defaultEncoding: utf8);
+    await _postDataTest(
+      message4,
+      'multipart/form-data',
+      '----WebKitFormBoundaryGXtBrcjxheKeN6i0',
+      [FormField('test', 'ひらがな')],
+      defaultEncoding: utf8,
+    );
   });
 
   test('WebKit', () async {
@@ -267,10 +309,14 @@ Content of file\r
       110, 97, 109, 101, 34, 13, 10, 13, 10, 248, 118, 13, 10, 45, 45, 45, 45,
       45, 45, 87, 101, 98, 75, 105, 116, 70, 111, 114, 109, 66, 111, 117, 110,
       100, 97, 114, 121, 102, 101, 48, 69, 122, 86, 49, 97, 78, 121, 115, 68,
-      49, 98, 80, 104, 45, 45, 13, 10
+      49, 98, 80, 104, 45, 45, 13, 10,
     ];
 
-    await _postDataTest(message5, 'multipart/form-data',
-        '----WebKitFormBoundaryfe0EzV1aNysD1bPh', [FormField('name', 'øv')]);
+    await _postDataTest(
+      message5,
+      'multipart/form-data',
+      '----WebKitFormBoundaryfe0EzV1aNysD1bPh',
+      [FormField('name', 'øv')],
+    );
   });
 }

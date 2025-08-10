@@ -117,7 +117,7 @@ class FakeHttpHeaders implements HttpHeaders {
       invocation.isGetter,
       invocation.isSetter,
       invocation.isMethod,
-      invocation.isAccessor
+      invocation.isAccessor,
     ]);
     return super.noSuchMethod(invocation);
   }
@@ -134,11 +134,12 @@ class FakeHttpRequest extends StreamView<Uint8List> implements HttpRequest {
   final String method = 'GET';
   final bool followRedirects;
 
-  FakeHttpRequest(this.uri,
-      {this.followRedirects = true,
-      DateTime? ifModifiedSince,
-      required Stream<Uint8List> data})
-      : super(data) {
+  FakeHttpRequest(
+    this.uri, {
+    this.followRedirects = true,
+    DateTime? ifModifiedSince,
+    required Stream<Uint8List> data,
+  }) : super(data) {
     if (ifModifiedSince != null) {
       headers.ifModifiedSince = ifModifiedSince;
     }

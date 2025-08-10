@@ -1,5 +1,11 @@
 # Change Log
 
+## 4.6.0
+
+* Require Dart >= 3.8
+* Updated `lints` to 6.0.0
+* Updated dependencies to the latest release
+
 ## 4.5.1
 
 * Fixed linter warnings

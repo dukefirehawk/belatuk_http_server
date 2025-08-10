@@ -44,7 +44,9 @@ void main() {
       final hasCurrentIterator = HasCurrentIterator(mockItems.iterator);
       hasCurrentIterator.moveNext();
       expect(
-          hasCurrentIterator.current, allOf(isNotEmpty, equals(mockFirstItem)));
+        hasCurrentIterator.current,
+        allOf(isNotEmpty, equals(mockFirstItem)),
+      );
     });
 
     test('should return last item item', () {
@@ -52,7 +54,9 @@ void main() {
       hasCurrentIterator.moveNext();
       hasCurrentIterator.moveNext();
       expect(
-          hasCurrentIterator.current, allOf(isNotEmpty, equals(mockLastItem)));
+        hasCurrentIterator.current,
+        allOf(isNotEmpty, equals(mockLastItem)),
+      );
     });
   });
 

@@ -46,10 +46,9 @@ class VirtualDirectory {
 
   static List<String> _parsePathPrefix(String? pathPrefix) {
     if (pathPrefix == null) return <String>[];
-    return Uri(path: pathPrefix)
-        .pathSegments
-        .where((segment) => segment.isNotEmpty)
-        .toList();
+    return Uri(
+      path: pathPrefix,
+    ).pathSegments.where((segment) => segment.isNotEmpty).toList();
   }
 
   /// Create a new [VirtualDirectory] for serving static file content of the
@@ -64,7 +63,7 @@ class VirtualDirectory {
   /// If the requests uri doesn't start with [pathPrefix], a 404 response is
   /// generated.
   VirtualDirectory(this.root, {String? pathPrefix})
-      : _pathPrefixSegments = _parsePathPrefix(pathPrefix);
+    : _pathPrefixSegments = _parsePathPrefix(pathPrefix);
 
   /// Serve a [Stream] of [HttpRequest]s, in this [VirtualDirectory].
   StreamSubscription<HttpRequest> serve(Stream<HttpRequest> requests) =>
@@ -92,8 +91,12 @@ class VirtualDirectory {
         _serveErrorPage(HttpStatus.notFound, request);
       }
     } else if (entity is _DirectoryRedirect) {
-      _unawaited(request.response.redirect(Uri.parse('${request.uri}/'),
-          status: HttpStatus.movedPermanently));
+      _unawaited(
+        request.response.redirect(
+          Uri.parse('${request.uri}/'),
+          status: HttpStatus.movedPermanently,
+        ),
+      );
     } else {
       assert(entity == null);
       _serveErrorPage(HttpStatus.notFound, request);
@@ -118,7 +121,9 @@ class VirtualDirectory {
   }
 
   Future<Object?> _locateResource(
-      String path, HasCurrentIterator<String> segments) async {
+    String path,
+    HasCurrentIterator<String> segments,
+  ) async {
     // Don't allow navigating up paths.
     if (segments.hasCurrent && segments.current == '..') {
       return Future.value(null);
@@ -232,14 +237,18 @@ class VirtualDirectory {
             }
 
             // Override Content-Length with the actual bytes sent.
-            response.headers
-                .set(HttpHeaders.contentLengthHeader, end - start + 1);
+            response.headers.set(
+              HttpHeaders.contentLengthHeader,
+              end - start + 1,
+            );
 
             // Set 'Partial Content' status code.
             response
               ..statusCode = HttpStatus.partialContent
               ..headers.set(
-                  HttpHeaders.contentRangeHeader, 'bytes $start-$end/$length');
+                HttpHeaders.contentRangeHeader,
+                'bytes $start-$end/$length',
+              );
 
             // Pipe the 'range' of the file.
             if (request.method == 'HEAD') {
@@ -264,10 +273,9 @@ class VirtualDirectory {
         await response.close();
       } else {
         try {
-          await file
-              .openRead()
-              .cast<List<int>>()
-              .pipe(_VirtualDirectoryFileStream(response, file.path));
+          await file.openRead().cast<List<int>>().pipe(
+            _VirtualDirectoryFileStream(response, file.path),
+          );
         } catch (_) {
           // TODO(kevmoo): log errors
         }
@@ -293,8 +301,11 @@ class VirtualDirectory {
         return;
       }
 
-      response.headers.contentType =
-          ContentType('text', 'html', parameters: {'charset': 'utf-8'});
+      response.headers.contentType = ContentType(
+        'text',
+        'html',
+        parameters: {'charset': 'utf-8'},
+      );
       response.headers.set(HttpHeaders.lastModifiedHeader, stats.modified);
       var path = Uri.decodeComponent(request.uri.path);
       var encodedPath = const HtmlEscape().convert(path);
@@ -316,7 +327,8 @@ http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 ''';
       var server = response.headers.value(HttpHeaders.serverHeader);
       server ??= '';
-      var footer = '''</table>
+      var footer =
+          '''</table>
 $server
 </body>
 </html>
@@ -329,15 +341,17 @@ $server
         modified ??= '';
         var encodedSize = const HtmlEscape().convert(size.toString());
         var encodedModified = const HtmlEscape().convert(modified);
-        var encodedLink = const HtmlEscape(HtmlEscapeMode.attribute)
-            .convert(Uri.encodeComponent(name));
+        var encodedLink = const HtmlEscape(
+          HtmlEscapeMode.attribute,
+        ).convert(Uri.encodeComponent(name));
         if (folder) {
           encodedLink += '/';
           name += '/';
         }
         var encodedName = const HtmlEscape().convert(name);
 
-        var entry = '''  <tr>
+        var entry =
+            '''  <tr>
     <td><a href="$encodedLink">$encodedName</a></td>
     <td>$encodedModified</td>
     <td style="text-align: right">$encodedSize</td>
@@ -349,20 +363,26 @@ $server
         add('..', null, null, true);
       }
 
-      dir.list(followLinks: true).listen((entity) {
-        var name = basename(entity.path);
-        var stat = entity.statSync();
-        if (entity is File) {
-          add(name, stat.modified.toString(), stat.size, false);
-        } else if (entity is Directory) {
-          add(name, stat.modified.toString(), null, true);
-        }
-      }, onError: (e) {
-        // TODO(kevmoo): log error
-      }, onDone: () {
-        response.write(footer);
-        response.close();
-      });
+      dir
+          .list(followLinks: true)
+          .listen(
+            (entity) {
+              var name = basename(entity.path);
+              var stat = entity.statSync();
+              if (entity is File) {
+                add(name, stat.modified.toString(), stat.size, false);
+              } else if (entity is Directory) {
+                add(name, stat.modified.toString(), null, true);
+              }
+            },
+            onError: (e) {
+              // TODO(kevmoo): log error
+            },
+            onDone: () {
+              response.write(footer);
+              response.close();
+            },
+          );
     } catch (_) {
       // TODO(kevmoo): log error
       await response.close();
@@ -376,8 +396,11 @@ $server
       _errorCallback!(request);
       return;
     }
-    response.headers.contentType =
-        ContentType('text', 'html', parameters: {'charset': 'utf-8'});
+    response.headers.contentType = ContentType(
+      'text',
+      'html',
+      parameters: {'charset': 'utf-8'},
+    );
     // Default error page.
     var path = Uri.decodeComponent(request.uri.path);
     var encodedPath = const HtmlEscape().convert(path);
@@ -386,7 +409,8 @@ $server
 
     var server = response.headers.value(HttpHeaders.serverHeader);
     server ??= '';
-    var page = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    var page =
+        '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -411,38 +435,42 @@ class _VirtualDirectoryFileStream implements StreamConsumer<List<int>> {
 
   @override
   Future addStream(Stream<List<int>> stream) {
-    stream.listen((data) {
-      if (buffer == null) {
-        response.add(data);
-        return;
-      }
-      if (buffer!.isEmpty) {
-        if (data.length >= defaultMagicNumbersMaxLength) {
-          setMimeType(data);
+    stream.listen(
+      (data) {
+        if (buffer == null) {
           response.add(data);
-          buffer = null;
+          return;
+        }
+        if (buffer!.isEmpty) {
+          if (data.length >= defaultMagicNumbersMaxLength) {
+            setMimeType(data);
+            response.add(data);
+            buffer = null;
+          } else {
+            buffer!.addAll(data);
+          }
         } else {
           buffer!.addAll(data);
+          if (buffer!.length >= defaultMagicNumbersMaxLength) {
+            setMimeType(buffer);
+            response.add(buffer!);
+            buffer = null;
+          }
         }
-      } else {
-        buffer!.addAll(data);
-        if (buffer!.length >= defaultMagicNumbersMaxLength) {
-          setMimeType(buffer);
-          response.add(buffer!);
-          buffer = null;
+      },
+      onDone: () {
+        if (buffer != null) {
+          if (buffer!.isEmpty) {
+            setMimeType(null);
+          } else {
+            setMimeType(buffer);
+            response.add(buffer!);
+          }
         }
-      }
-    }, onDone: () {
-      if (buffer != null) {
-        if (buffer!.isEmpty) {
-          setMimeType(null);
-        } else {
-          setMimeType(buffer);
-          response.add(buffer!);
-        }
-      }
-      response.close();
-    }, onError: response.addError);
+        response.close();
+      },
+      onError: response.addError,
+    );
     return response.done;
   }
 

@@ -53,7 +53,7 @@
 /// ```
 ///
 /// See [VirtualHost] for more information.
-library http_server;
+library;
 
 import 'src/virtual_directory.dart';
 import 'src/virtual_host.dart';

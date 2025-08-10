@@ -28,7 +28,10 @@ void testVirtualDir(String name, Future<void> Function(Directory) func) {
 }
 
 void _testVirtualDir(
-    String name, bool useFakes, Future<void> Function(Directory) func) {
+  String name,
+  bool useFakes,
+  Future<void> Function(Directory) func,
+) {
   if (useFakes) {
     name = '$name, with fakes';
   }
@@ -47,22 +50,27 @@ void _testVirtualDir(
   });
 }
 
-Future<int> statusCodeForVirtDir(VirtualDirectory virtualDir, String path,
-    {String? host,
-    bool secure = false,
-    DateTime? ifModifiedSince,
-    bool rawPath = false,
-    bool followRedirects = true,
-    int? from,
-    int? to}) async {
+Future<int> statusCodeForVirtDir(
+  VirtualDirectory virtualDir,
+  String path, {
+  String? host,
+  bool secure = false,
+  DateTime? ifModifiedSince,
+  bool rawPath = false,
+  bool followRedirects = true,
+  int? from,
+  int? to,
+}) async {
   // if this is a fake test, then run the fake code path
   if (_isFakeTestExpando[currentTestCase]!) {
     var uri = _localhostUri(0, path, secure: secure, rawPath: rawPath);
 
-    var request = FakeHttpRequest(uri,
-        followRedirects: followRedirects,
-        ifModifiedSince: ifModifiedSince,
-        data: StreamController<Uint8List>().stream);
+    var request = FakeHttpRequest(
+      uri,
+      followRedirects: followRedirects,
+      ifModifiedSince: ifModifiedSince,
+      data: StreamController<Uint8List>().stream,
+    );
     _addRangeHeader(request, from, to);
 
     var response = await _withFakeRequest(virtualDir, request);
@@ -72,25 +80,31 @@ Future<int> statusCodeForVirtDir(VirtualDirectory virtualDir, String path,
   assert(_isFakeTestExpando[currentTestCase] == false);
 
   return _withServer(virtualDir, (port) {
-    return fetchStatusCode(port, path,
-        host: host,
-        secure: secure,
-        ifModifiedSince: ifModifiedSince,
-        rawPath: rawPath,
-        followRedirects: followRedirects,
-        from: from,
-        to: to);
+    return fetchStatusCode(
+      port,
+      path,
+      host: host,
+      secure: secure,
+      ifModifiedSince: ifModifiedSince,
+      rawPath: rawPath,
+      followRedirects: followRedirects,
+      from: from,
+      to: to,
+    );
   });
 }
 
-Future<int> fetchStatusCode(int port, String path,
-    {String? host,
-    bool secure = false,
-    DateTime? ifModifiedSince,
-    bool rawPath = false,
-    bool followRedirects = true,
-    int? from,
-    int? to}) async {
+Future<int> fetchStatusCode(
+  int port,
+  String path, {
+  String? host,
+  bool secure = false,
+  DateTime? ifModifiedSince,
+  bool rawPath = false,
+  bool followRedirects = true,
+  int? from,
+  int? to,
+}) async {
   var uri = _localhostUri(port, path, secure: secure, rawPath: rawPath);
 
   HttpClient client;
@@ -117,14 +131,20 @@ Future<int> fetchStatusCode(int port, String path,
   }
 }
 
-Future<HttpHeaders> fetchHEaders(VirtualDirectory virDir, String path,
-    {int? from, int? to}) async {
+Future<HttpHeaders> fetchHEaders(
+  VirtualDirectory virDir,
+  String path, {
+  int? from,
+  int? to,
+}) async {
   // if this is a fake test, then run the fake code path
   if (_isFakeTestExpando[currentTestCase]!) {
     var uri = _localhostUri(0, path);
 
-    var request =
-        FakeHttpRequest(uri, data: StreamController<Uint8List>().stream);
+    var request = FakeHttpRequest(
+      uri,
+      data: StreamController<Uint8List>().stream,
+    );
     _addRangeHeader(request, from, to);
 
     var response = await _withFakeRequest(virDir, request);
@@ -141,8 +161,10 @@ Future<String> fetchAsString(VirtualDirectory virtualDir, String path) async {
   if (_isFakeTestExpando[currentTestCase]!) {
     var uri = _localhostUri(0, path);
 
-    var request =
-        FakeHttpRequest(uri, data: StreamController<Uint8List>().stream);
+    var request = FakeHttpRequest(
+      uri,
+      data: StreamController<Uint8List>().stream,
+    );
 
     var response = await _withFakeRequest(virtualDir, request);
     return response.fakeContent;
@@ -153,14 +175,20 @@ Future<String> fetchAsString(VirtualDirectory virtualDir, String path) async {
   return _withServer(virtualDir, (int port) => _fetchAsString(port, path));
 }
 
-Future<List<int>> fetchAsBytes(VirtualDirectory virtualDir, String path,
-    {int? from, int? to}) async {
+Future<List<int>> fetchAsBytes(
+  VirtualDirectory virtualDir,
+  String path, {
+  int? from,
+  int? to,
+}) async {
   // if this is a fake test, then run the fake code path
   if (_isFakeTestExpando[currentTestCase]!) {
     var uri = _localhostUri(0, path);
 
-    var request =
-        FakeHttpRequest(uri, data: StreamController<Uint8List>().stream);
+    var request = FakeHttpRequest(
+      uri,
+      data: StreamController<Uint8List>().stream,
+    );
     _addRangeHeader(request, from, to);
 
     var response = await _withFakeRequest(virtualDir, request);
@@ -170,17 +198,25 @@ Future<List<int>> fetchAsBytes(VirtualDirectory virtualDir, String path,
   assert(_isFakeTestExpando[currentTestCase] == false);
 
   return _withServer(
-      virtualDir, (int port) => _fetchAsBytes(port, path, from, to));
+    virtualDir,
+    (int port) => _fetchAsBytes(port, path, from, to),
+  );
 }
 
-Future<List> fetchContentAndResponse(VirtualDirectory virtualDir, String path,
-    {int? from, int? to}) async {
+Future<List> fetchContentAndResponse(
+  VirtualDirectory virtualDir,
+  String path, {
+  int? from,
+  int? to,
+}) async {
   // if this is a fake test, then run the fake code path
   if (_isFakeTestExpando[currentTestCase]!) {
     var uri = _localhostUri(0, path);
 
-    var request =
-        FakeHttpRequest(uri, data: StreamController<Uint8List>().stream);
+    var request = FakeHttpRequest(
+      uri,
+      data: StreamController<Uint8List>().stream,
+    );
     _addRangeHeader(request, from, to);
 
     var response = await _withFakeRequest(virtualDir, request);
@@ -190,11 +226,15 @@ Future<List> fetchContentAndResponse(VirtualDirectory virtualDir, String path,
   assert(_isFakeTestExpando[currentTestCase] == false);
 
   return _withServer(
-      virtualDir, (int port) => _fetchContentAndResponse(port, path, from, to));
+    virtualDir,
+    (int port) => _fetchContentAndResponse(port, path, from, to),
+  );
 }
 
 Future<FakeHttpResponse> _withFakeRequest(
-    VirtualDirectory virDir, FakeHttpRequest request) async {
+  VirtualDirectory virDir,
+  FakeHttpRequest request,
+) async {
   var value = await virDir.serveRequest(request);
 
   expect(value, isNull);
@@ -206,8 +246,11 @@ Future<FakeHttpResponse> _withFakeRequest(
       response.statusCode == HttpStatus.movedTemporarily) {
     if (request.followRedirects == true) {
       var uri = Uri.parse(response.headers.value(HttpHeaders.locationHeader)!);
-      var newMock = FakeHttpRequest(uri,
-          followRedirects: true, data: StreamController<Uint8List>().stream);
+      var newMock = FakeHttpRequest(
+        uri,
+        followRedirects: true,
+        data: StreamController<Uint8List>().stream,
+      );
 
       return _withFakeRequest(virDir, newMock);
     }
@@ -216,7 +259,9 @@ Future<FakeHttpResponse> _withFakeRequest(
 }
 
 Future<T> _withServer<T>(
-    VirtualDirectory virDir, Future<T> Function(int port) func) async {
+  VirtualDirectory virDir,
+  Future<T> Function(int port) func,
+) async {
   var server = await HttpServer.bind('localhost', 0);
 
   try {
@@ -252,7 +297,11 @@ Future<String> _fetchAsString(int port, String path) async {
 }
 
 Future<List<int>> _fetchAsBytes(
-    int port, String path, int? from, int? to) async {
+  int port,
+  String path,
+  int? from,
+  int? to,
+) async {
   var client = HttpClient();
   try {
     var request = await client.get('localhost', port, path);
@@ -265,7 +314,11 @@ Future<List<int>> _fetchAsBytes(
 }
 
 Future<List> _fetchContentAndResponse(
-    int port, String path, int? from, int? to) async {
+  int port,
+  String path,
+  int? from,
+  int? to,
+) async {
   var client = HttpClient();
   try {
     var request = await client.get('localhost', port, path);
@@ -278,14 +331,19 @@ Future<List> _fetchContentAndResponse(
   }
 }
 
-Uri _localhostUri(int port, String path,
-    {bool secure = false, bool rawPath = false}) {
+Uri _localhostUri(
+  int port,
+  String path, {
+  bool secure = false,
+  bool rawPath = false,
+}) {
   if (rawPath) {
     return Uri(
-        scheme: secure ? 'https' : 'http',
-        host: 'localhost',
-        port: port,
-        path: path);
+      scheme: secure ? 'https' : 'http',
+      host: 'localhost',
+      port: port,
+      path: path,
+    );
   } else {
     return (secure
         ? Uri.https('localhost:$port', path)
@@ -293,7 +351,7 @@ Uri _localhostUri(int port, String path,
   }
 }
 
-void _addRangeHeader(request, int? from, int? to) {
+void _addRangeHeader(dynamic request, int? from, int? to) {
   var fromStr = from != null ? '$from' : '';
   var toStr = to != null ? '$to' : '';
   if (fromStr.isNotEmpty || toStr.isNotEmpty) {
@@ -309,8 +367,10 @@ void setupSecure() {
 
   serverContext = SecurityContext()
     ..useCertificateChain(localFile('certificates/server_chain.pem'))
-    ..usePrivateKey(localFile('certificates/server_key.pem'),
-        password: 'dartdart');
+    ..usePrivateKey(
+      localFile('certificates/server_key.pem'),
+      password: 'dartdart',
+    );
 
   clientContext = SecurityContext()
     ..setTrustedCertificates(localFile('certificates/trusted_certs.pem'));
