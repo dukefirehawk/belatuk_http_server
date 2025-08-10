@@ -63,8 +63,10 @@ void main() {
           var request = await host.first;
           await request.response.close();
         }
-        expect(await Future.wait(statusCodes),
-            equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]));
+        expect(
+          await Future.wait(statusCodes),
+          equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]),
+        );
       });
 
       test('wildcard-sub-domain', () async {
@@ -82,8 +84,10 @@ void main() {
           var request = await host.first;
           await request.response.close();
         }
-        expect(await Future.wait(statusCodes),
-            equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]));
+        expect(
+          await Future.wait(statusCodes),
+          equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]),
+        );
       });
 
       test('mix-sub-domain', () async {
@@ -101,8 +105,10 @@ void main() {
           var request = await host.first;
           await request.response.close();
         }
-        expect(await Future.wait(statusCodes),
-            equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]));
+        expect(
+          await Future.wait(statusCodes),
+          equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]),
+        );
       });
 
       test('wildcard', () async {
@@ -120,22 +126,31 @@ void main() {
           var request = await host.first;
           await request.response.close();
         }
-        expect(await Future.wait(statusCodes),
-            equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]));
+        expect(
+          await Future.wait(statusCodes),
+          equals([HttpStatus.ok, HttpStatus.ok, HttpStatus.ok]),
+        );
       });
     });
 
     test('multiple-source-https', () async {
-      var secondServer =
-          await HttpServer.bindSecure('localhost', 0, serverContext);
+      var secondServer = await HttpServer.bindSecure(
+        'localhost',
+        0,
+        serverContext,
+      );
       virHost.addSource(secondServer);
       virHost.unhandled.listen((request) {
         request.response.close();
       });
       var statusCodes = await Future.wait([
         fetchStatusCode(server.port, '/', host: 'myhost1.com'),
-        fetchStatusCode(secondServer.port, '/',
-            host: 'myhost2.com', secure: true)
+        fetchStatusCode(
+          secondServer.port,
+          '/',
+          host: 'myhost2.com',
+          secure: true,
+        ),
       ]);
       expect(statusCodes, [HttpStatus.ok, HttpStatus.ok]);
       await secondServer.close();

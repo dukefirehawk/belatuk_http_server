@@ -106,7 +106,7 @@ class HttpBodyHandler
   /// `multipart/form-data` content correctly. See the class comment
   /// for more information on `multipart/form-data`.
   HttpBodyHandler({Encoding defaultEncoding = utf8})
-      : _defaultEncoding = defaultEncoding;
+    : _defaultEncoding = defaultEncoding;
 
   /// Process and parse an incoming [HttpRequest].
   ///
@@ -114,8 +114,10 @@ class HttpBodyHandler
   /// the [HttpResponse].
   ///
   /// See [HttpBodyHandler] for more info on [defaultEncoding].
-  static Future<HttpRequestBody> processRequest(HttpRequest request,
-      {Encoding defaultEncoding = utf8}) async {
+  static Future<HttpRequestBody> processRequest(
+    HttpRequest request, {
+    Encoding defaultEncoding = utf8,
+  }) async {
     try {
       var body = await _process(request, request.headers, defaultEncoding);
       return HttpRequestBody._(request, body);
@@ -131,8 +133,9 @@ class HttpBodyHandler
   ///
   /// See [HttpBodyHandler] for more info on [defaultEncoding].
   static Future<HttpClientResponseBody> processResponse(
-      HttpClientResponse response,
-      {Encoding defaultEncoding = utf8}) async {
+    HttpClientResponse response, {
+    Encoding defaultEncoding = utf8,
+  }) async {
     var body = await _process(response, response.headers, defaultEncoding);
     return HttpClientResponseBody._(response, body);
   }
@@ -142,22 +145,28 @@ class HttpBodyHandler
     var pending = 0;
     var closed = false;
     return stream.transform(
-        StreamTransformer.fromHandlers(handleData: (request, sink) async {
-      pending++;
-      try {
-        var body =
-            await processRequest(request, defaultEncoding: _defaultEncoding);
-        sink.add(body);
-      } catch (e, st) {
-        sink.addError(e, st);
-      } finally {
-        pending--;
-        if (closed && pending == 0) sink.close();
-      }
-    }, handleDone: (sink) {
-      closed = true;
-      if (pending == 0) sink.close();
-    }));
+      StreamTransformer.fromHandlers(
+        handleData: (request, sink) async {
+          pending++;
+          try {
+            var body = await processRequest(
+              request,
+              defaultEncoding: _defaultEncoding,
+            );
+            sink.add(body);
+          } catch (e, st) {
+            sink.addError(e, st);
+          } finally {
+            pending--;
+            if (closed && pending == 0) sink.close();
+          }
+        },
+        handleDone: (sink) {
+          closed = true;
+          if (pending == 0) sink.close();
+        },
+      ),
+    );
   }
 }
 
@@ -182,7 +191,7 @@ class HttpClientResponseBody extends HttpBody {
   final HttpClientResponse response;
 
   HttpClientResponseBody._(this.response, HttpBody body)
-      : super._(body.type, body.body);
+    : super._(body.type, body.body);
 }
 
 /// The body of a [HttpRequest].
@@ -196,7 +205,7 @@ class HttpRequestBody extends HttpBody {
   final HttpRequest request;
 
   HttpRequestBody._(this.request, HttpBody body)
-      : super._(body.type, body.body);
+    : super._(body.type, body.body);
 }
 
 /// A wrapper around a file upload.
@@ -217,11 +226,16 @@ class HttpBodyFileUpload {
   HttpBodyFileUpload._(this.contentType, this.filename, this.content);
 }
 
-Future<HttpBody> _process(Stream<List<int>> stream, HttpHeaders headers,
-    Encoding defaultEncoding) async {
+Future<HttpBody> _process(
+  Stream<List<int>> stream,
+  HttpHeaders headers,
+  Encoding defaultEncoding,
+) async {
   Future<HttpBody> asBinary() async {
     var builder = await stream.fold<BytesBuilder>(
-        BytesBuilder(), (builder, data) => builder..add(data));
+      BytesBuilder(),
+      (builder, data) => builder..add(data),
+    );
     return HttpBody._('binary', builder.takeBytes());
   }
 
@@ -243,28 +257,42 @@ Future<HttpBody> _process(Stream<List<int>> stream, HttpHeaders headers,
   }
 
   Future<HttpBody> asFormData() async {
-    var values = await MimeMultipartTransformer(
-            contentType.parameters['boundary']!)
-        .bind(stream)
-        .map((part) =>
-            HttpMultipartFormData.parse(part, defaultEncoding: defaultEncoding))
-        .map((multipart) async {
-      dynamic data;
-      if (multipart.isText) {
-        var buffer = await multipart.fold<StringBuffer>(
-            StringBuffer(), (b, s) => b..write(s));
-        data = buffer.toString();
-      } else {
-        var buffer = await multipart.fold<BytesBuilder>(
-            BytesBuilder(), (b, d) => b..add(d as List<int>));
-        data = buffer.takeBytes();
-      }
-      var filename = multipart.contentDisposition.parameters['filename'];
-      if (filename != null) {
-        data = HttpBodyFileUpload._(multipart.contentType, filename, data);
-      }
-      return [multipart.contentDisposition.parameters['name'], data];
-    }).toList();
+    var values =
+        await MimeMultipartTransformer(contentType.parameters['boundary']!)
+            .bind(stream)
+            .map(
+              (part) => HttpMultipartFormData.parse(
+                part,
+                defaultEncoding: defaultEncoding,
+              ),
+            )
+            .map((multipart) async {
+              dynamic data;
+              if (multipart.isText) {
+                var buffer = await multipart.fold<StringBuffer>(
+                  StringBuffer(),
+                  (b, s) => b..write(s),
+                );
+                data = buffer.toString();
+              } else {
+                var buffer = await multipart.fold<BytesBuilder>(
+                  BytesBuilder(),
+                  (b, d) => b..add(d as List<int>),
+                );
+                data = buffer.takeBytes();
+              }
+              var filename =
+                  multipart.contentDisposition.parameters['filename'];
+              if (filename != null) {
+                data = HttpBodyFileUpload._(
+                  multipart.contentType,
+                  filename,
+                  data,
+                );
+              }
+              return [multipart.contentDisposition.parameters['name'], data];
+            })
+            .toList();
     var parts = await Future.wait(values);
     var map = <String, dynamic>{};
     for (var part in parts) {
@@ -285,8 +313,10 @@ Future<HttpBody> _process(Stream<List<int>> stream, HttpHeaders headers,
 
         case 'x-www-form-urlencoded':
           var body = await asText(ascii);
-          var map = Uri.splitQueryString(body.body as String,
-              encoding: defaultEncoding);
+          var map = Uri.splitQueryString(
+            body.body as String,
+            encoding: defaultEncoding,
+          );
           var result = {};
           for (var key in map.keys) {
             result[key] = map[key];
